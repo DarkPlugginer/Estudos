@@ -3,6 +3,7 @@ package me.dark.packets;
 import com.mojang.authlib.GameProfile;
 import io.netty.channel.Channel;
 import me.dark.Main;
+import me.dark.others.CheckPremium;
 import net.minecraft.server.v1_8_R3.*;
 import org.apache.commons.io.Charsets;
 import org.bukkit.entity.Player;
@@ -13,7 +14,7 @@ import java.util.UUID;
 
 public class Login {
 
-    TinyProtocol protocol;
+    private TinyProtocol protocol;
     private Reflection.FieldAccessor<GameProfile> gameProfile = Reflection.getField("{nms}.PacketLoginInStart", GameProfile.class, 0);
 
     public void enable() {
@@ -23,9 +24,13 @@ public class Login {
             public Object onPacketInAsync(Player sender, Channel channel, Object packet) {
                 if (packet instanceof PacketLoginInStart) {
                     if (gameProfile.hasField(packet)) {
-                        System.out.println("jose");
-                        new BypassLogin(channel);
-                        packet = null;
+                        GameProfile profile = gameProfile.get(packet);
+
+                        if (!(new CheckPremium(profile.getName()).getResult())) {
+                            System.out.println("jose");
+                            new BypassLogin(channel, profile);
+                            return null;
+                        }
                     }
                 }
 
@@ -112,11 +117,11 @@ public class Login {
 
     private class BypassLogin extends LoginListener {
 
-        private BypassLogin(Channel packet) {
+        private BypassLogin(Channel packet, GameProfile profile) {
             super(MinecraftServer.getServer(), networkList(packet.remoteAddress()));
             try {
                 ClassReflection.setField("m", this, this.networkManager, 0);
-                ClassReflection.setField("i", gameProfile.get(packet), this, 1);
+                ClassReflection.setField("i", profile, this, 1);
             } catch (Exception e1) {
             }
         }
