@@ -1,5 +1,8 @@
 package me.dark.packets;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.mojang.authlib.GameProfile;
 import io.netty.channel.Channel;
 import me.dark.Main;
@@ -9,19 +12,22 @@ import net.minecraft.server.v1_8_R3.*;
 import org.apache.commons.io.Charsets;
 import org.bukkit.entity.Player;
 
-import java.lang.reflect.Field;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.SocketAddress;
+import java.net.URL;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 public class Login {
 
-    private TinyProtocol protocol;
     private Reflection.FieldAccessor<GameProfile> gameProfile = Reflection.getField("{nms}.PacketLoginInStart", GameProfile.class, 0);
 
     public void enable() {
 
-        protocol = new TinyProtocol(Main.getMain()) {
+        new TinyProtocol(Main.getMain()) {
             @Override
             public Object onPacketInAsync(Player sender, Channel channel, Object packet) {
                 if (packet instanceof PacketLoginInStart) {
@@ -34,6 +40,10 @@ public class Login {
 
                             new BypassLogin(channel, profile);
                             return null;
+                        } else {
+                            if (!(loginCheck(profile.getName(), profile.getId().toString()))) {
+                                disconnect("Ocorreu um erro, por favor, tente novamente.", networkList(channel.localAddress()));
+                            }
                         }
                     }
                 }
@@ -41,60 +51,9 @@ public class Login {
                 return super.onPacketInAsync(sender, channel, packet);
             }
         };
-
-       /* PacketEvent packetEvent = new PacketEvent() {
-
-            @Override
-            public PacketSend onSend(PacketSend packetSend) {
-                return packetSend;
-            }
-
-            @Override
-            public PacketReceive onReceive(PacketReceive packetReceive) {
-                if (packetReceive.getPacket().equals("PacketLoginInStart")) {
-                    if (gameProfile.hasField(packetReceive.getPacket())) {
-                        try {
-                            if (recieveLogin(packetReceive)) {
-                                // Se o jogador for pirata
-                                packetReceive.setCancelled(true);
-                            } else {
-                                // Se o jogador for original
-                            }
-                            Thread.sleep(500L);
-
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-                return packetReceive;
-            }
-        };*/
-
     }
 
-   /* private boolean recieveLogin(Channel packet) {
-        ReturnType type = MajorMojangAPI.checkNicknamePremiumStatusAsync(gameProfile.get(packet).getName());
-        if (type == ReturnType.ORIGINAL) {
-            // Se o player for original
-            return false;
-        } else if (type == ReturnType.PIRATA) {
-            // Se o player for pirata
-            System.out.println("Pirata");
-
-            return true;
-        } else if (type == ReturnType.INVALID_NICKNAME) {
-            disconnect("Seu nome de usuario é invalido!", networkList(packet.getMajorChannel().remoteAddress()));
-        } else if (type == ReturnType.TIMEOUT) {
-            disconnect("Você demorou muito para logar!", networkList(packet.getMajorChannel().remoteAddress()));
-        } else {
-            disconnect("Estamos passando por muitas requisições no momento\n\nPor favor aguarde!",
-                    networkList(packet.getMajorChannel().remoteAddress()));
-        }
-        return true;
-    } */
-
-    public void disconnect(String s, NetworkManager nm) {
+    private void disconnect(String s, NetworkManager nm) {
         try {
             ChatComponentText exception = new ChatComponentText(s);
             nm.handle(new PacketLoginOutDisconnect(exception));
@@ -103,6 +62,41 @@ public class Login {
             System.err.println(arg2.getMessage());
         }
 
+    }
+
+    private String fetchUUID(String username) {
+        try {
+
+            URL url = new URL("https://api.mojang.com/users/profiles/minecraft/" + username);
+            InputStream stream = url.openStream();
+            InputStreamReader inr = new InputStreamReader(stream);
+            BufferedReader reader = new BufferedReader(inr);
+
+            StringBuilder sb = new StringBuilder();
+            String s;
+            while ((s = reader.readLine()) != null) {
+                sb.append(s);
+            }
+            String result = sb.toString();
+
+            JsonElement element = new JsonParser().parse(result);
+            JsonObject obj = element.getAsJsonObject();
+
+            String uuid = obj.get("id").toString();
+
+            uuid = uuid.substring(1);
+            return uuid.substring(0, uuid.length() - 1);
+
+
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+
+        return null;
+    }
+
+    private boolean loginCheck(String name, String uuid) {
+        return (Objects.equals(fetchUUID(name), uuid)) || (Objects.equals(fetchUUID(name), uuid));
     }
 
     @SuppressWarnings("unchecked")
@@ -118,12 +112,6 @@ public class Login {
             System.err.println(e1.getMessage());
         }
         return null;
-    }
-
-    private void setValue(Object instance, String field, Object value) throws Exception {
-        Field f = instance.getClass().getDeclaredField(field);
-        f.setAccessible(true);
-        f.set(instance, value);
     }
 
     private class BypassLogin extends LoginListener {
@@ -155,7 +143,6 @@ public class Login {
                         MinecraftServer.getServer().getWorldServer(0), validProfile,
                         new PlayerInteractManager(MinecraftServer.getServer().getWorldServer(0)));
 
-                // Attempt login not null
                 this.networkManager.handle(new PacketLoginOutSuccess(validProfile));
                 MinecraftServer.getServer().getPlayerList().a(this.networkManager, attemptLogin);
 

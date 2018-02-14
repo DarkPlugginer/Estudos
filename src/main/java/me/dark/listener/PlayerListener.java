@@ -54,7 +54,7 @@ public class PlayerListener implements Listener {
     private void add(Player player) {
         ChannelDuplexHandler duplexHandler = new ChannelDuplexHandler() {
 
-            //PlayIn - Não intercept os de login
+            //PlayIn - Não intercepa os de login
             @Override
             public void channelRead(ChannelHandlerContext context, Object object) throws Exception {
                 super.channelRead(context, object);
