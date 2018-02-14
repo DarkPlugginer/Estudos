@@ -1,9 +1,13 @@
 package me.dark.packets;
 
 import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
+import com.mojang.authlib.properties.PropertyMap;
 import io.netty.channel.Channel;
 import me.dark.Main;
 import me.dark.others.CheckPremium;
+import me.dark.others.Skin;
+import me.dark.packets.reflection.ClassReflection;
 import net.minecraft.server.v1_8_R3.*;
 import org.apache.commons.io.Charsets;
 import org.bukkit.entity.Player;
@@ -27,7 +31,9 @@ public class Login {
                         GameProfile profile = gameProfile.get(packet);
 
                         if (!(new CheckPremium(profile.getName()).getResult())) {
-                            System.out.println("jose");
+                            System.out.println("Jogador pirata interceptado!");
+                            System.out.println("Nome: " + profile.getName());
+
                             new BypassLogin(channel, profile);
                             return null;
                         }
@@ -136,8 +142,14 @@ public class Login {
             try {
                 GameProfile validProfile = (GameProfile) ClassReflection.getField("i", this, 1);
                 validProfile = new GameProfile(
-                        UUID.nameUUIDFromBytes(("OfflinePlayer:" + validProfile.getName()).getBytes(Charsets.UTF_8)),
-                        validProfile.getName());
+                        UUID.nameUUIDFromBytes(("OfflinePlayer:" + validProfile.getName()).getBytes(Charsets.UTF_8)), validProfile.getName());
+
+                PropertyMap propertyMap = new PropertyMap();
+                Skin skin = new Skin(validProfile.getId().toString());
+                propertyMap.put(skin.getSkinName(), new Property(skin.getSkinName(), skin.getSkinValue(), skin.getSkinSignatur()));
+
+                ClassReflection.setField("properties", propertyMap, gameProfile, 0);
+
                 EntityPlayer attemptLogin = new EntityPlayer(MinecraftServer.getServer(),
                         MinecraftServer.getServer().getWorldServer(0), validProfile,
                         new PlayerInteractManager(MinecraftServer.getServer().getWorldServer(0)));
