@@ -4,12 +4,8 @@ import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.ChannelPromise;
-import me.dark.Main;
 import me.dark.npc.NPC;
 import net.minecraft.server.v1_8_R3.PacketPlayOutAnimation;
-import net.minecraft.server.v1_8_R3.PacketPlayOutEntity;
-import net.minecraft.server.v1_8_R3.PacketPlayOutEntityTeleport;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.bukkit.entity.Player;
@@ -17,13 +13,14 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
 public class PlayerListener implements Listener {
+
+    List<NPC> npcs = new ArrayList<>();
 
     public void add(Player player) {
         ChannelDuplexHandler duplexHandler = new ChannelDuplexHandler() {
@@ -41,11 +38,9 @@ public class PlayerListener implements Listener {
             }
         };
 
-        ChannelPipeline pipeline = ((CraftPlayer)player).getHandle().playerConnection.networkManager.channel.pipeline();
+        ChannelPipeline pipeline = ((CraftPlayer) player).getHandle().playerConnection.networkManager.channel.pipeline();
         pipeline.addBefore("packet_handler", player.getName(), duplexHandler);
     }
-
-    List<NPC> npcs = new ArrayList<>();
 
     @EventHandler
     void onPlayerJoin(PlayerJoinEvent event) {
@@ -82,8 +77,8 @@ public class PlayerListener implements Listener {
     void onPlayerMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
 
-        PacketPlayOutAnimation outAnimation = new PacketPlayOutAnimation(((CraftPlayer)player).getHandle(), 1);
-        ((CraftPlayer)player).getHandle().playerConnection.sendPacket(outAnimation);
+        PacketPlayOutAnimation outAnimation = new PacketPlayOutAnimation(((CraftPlayer) player).getHandle(), 1);
+        ((CraftPlayer) player).getHandle().playerConnection.sendPacket(outAnimation);
 
         npcs.get(0).teleport(player.getLocation());
     }

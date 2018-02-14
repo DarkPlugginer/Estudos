@@ -13,17 +13,16 @@ import java.util.UUID;
 
 public class Login {
 
-    private Reflection.FieldAccessor<GameProfile> gameProfile = Reflection.getField("{nms}.PacketLoginInStart", GameProfile.class, 0);
-
     TinyProtocol protocol;
+    private Reflection.FieldAccessor<GameProfile> gameProfile = Reflection.getField("{nms}.PacketLoginInStart", GameProfile.class, 0);
 
     public void enable() {
 
         protocol = new TinyProtocol(Main.getMain()) {
             @Override
             public Object onPacketInAsync(Player sender, Channel channel, Object packet) {
-                if(packet instanceof PacketLoginInStart) {
-                    if(gameProfile.hasField(packet)) {
+                if (packet instanceof PacketLoginInStart) {
+                    if (gameProfile.hasField(packet)) {
                         System.out.println("jose");
                         packet = null;
                         new BypassLogin(channel);
@@ -113,6 +112,15 @@ public class Login {
 
     private class BypassLogin extends LoginListener {
 
+        private BypassLogin(Channel packet) {
+            super(MinecraftServer.getServer(), networkList(packet.remoteAddress()));
+            try {
+                ClassReflection.setField("m", this, this.networkManager, 0);
+                ClassReflection.setField("i", gameProfile.get(packet), this, 1);
+            } catch (Exception e1) {
+            }
+        }
+
         @Override
         public void b() {
             c();
@@ -138,15 +146,6 @@ public class Login {
                 }
             } catch (Exception e1) {
 
-            }
-        }
-
-        private BypassLogin(Channel packet) {
-            super(MinecraftServer.getServer(), networkList(packet.remoteAddress()));
-            try {
-                ClassReflection.setField("m", this, this.networkManager, 0);
-                ClassReflection.setField("i", gameProfile.get(packet), this, 1);
-            } catch (Exception e1) {
             }
         }
     }

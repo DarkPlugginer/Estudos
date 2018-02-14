@@ -72,6 +72,10 @@ public class NPC {
         this(null, name, tablist, new Random().nextInt(10000), location, inHand, hideTablist);
     }
 
+    public static byte getFixRotation(float yawpitch) {
+        return (byte) ((int) (yawpitch * 256.0F / 360.0F));
+    }
+
     @SuppressWarnings("deprecation")
     public void spawn() {
         try {
@@ -97,7 +101,7 @@ public class NPC {
 
     @SuppressWarnings("deprecation")
     public void despawn() {
-        PacketPlayOutEntityDestroy packet = new PacketPlayOutEntityDestroy(new int[]{this.entityID});
+        PacketPlayOutEntityDestroy packet = new PacketPlayOutEntityDestroy(this.entityID);
         this.removeFromTablist();
         for (Player online : Bukkit.getOnlinePlayers()) {
             ((CraftPlayer) online).getHandle().playerConnection.sendPacket(packet);
@@ -198,8 +202,8 @@ public class NPC {
         }
     }
 
-    public static byte getFixRotation(float yawpitch) {
-        return (byte) ((int) (yawpitch * 256.0F / 360.0F));
+    public Material getItemInHand() {
+        return this.inHand;
     }
 
     @SuppressWarnings("deprecation")
@@ -218,8 +222,8 @@ public class NPC {
         }
     }
 
-    public Material getItemInHand() {
-        return this.inHand;
+    public Material getHelmet() {
+        return this.helmet;
     }
 
     @SuppressWarnings("deprecation")
@@ -238,8 +242,8 @@ public class NPC {
         }
     }
 
-    public Material getHelmet() {
-        return this.helmet;
+    public Material getChestplate() {
+        return this.chestplate;
     }
 
     @SuppressWarnings("deprecation")
@@ -258,8 +262,8 @@ public class NPC {
         }
     }
 
-    public Material getChestplate() {
-        return this.chestplate;
+    public Material getLeggings() {
+        return this.leggings;
     }
 
     @SuppressWarnings("deprecation")
@@ -278,8 +282,8 @@ public class NPC {
         }
     }
 
-    public Material getLeggings() {
-        return this.leggings;
+    public Material getBoots() {
+        return this.boots;
     }
 
     @SuppressWarnings("deprecation")
@@ -296,10 +300,6 @@ public class NPC {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    public Material getBoots() {
-        return this.boots;
     }
 
     public int getEntityID() {
@@ -512,9 +512,9 @@ public class NPC {
          * @see UUIDFetcher#getUUIDAt(String, long)
          */
         public static final long FEBRUARY_2015 = 1422748800000L;
-        private static Gson gson = new GsonBuilder().registerTypeAdapter(UUID.class, new UUIDTypeAdapter()).create();
         private static final String UUID_URL = "https://api.mojang.com/users/profiles/minecraft/%s?at=%d";
         private static final String NAME_URL = "https://api.mojang.com/user/profiles/%s/names";
+        private static Gson gson = new GsonBuilder().registerTypeAdapter(UUID.class, new UUIDTypeAdapter()).create();
         private static Map<String, UUID> uuidCache = new HashMap<String, UUID>();
         private static Map<UUID, String> nameCache = new HashMap<UUID, String>();
         private static ExecutorService pool = Executors.newCachedThreadPool();
@@ -625,7 +625,7 @@ public class NPC {
             return null;
         }
 
-        public static interface Consumer<T> {
+        public interface Consumer<T> {
             void accept(T t);
         }
 

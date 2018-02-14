@@ -24,7 +24,7 @@ public class A {
             }
         };
 
-        ChannelPipeline pipeline = ((CraftPlayer)player).getHandle().playerConnection.networkManager.channel.pipeline();
+        ChannelPipeline pipeline = ((CraftPlayer) player).getHandle().playerConnection.networkManager.channel.pipeline();
         pipeline.addBefore("packet_handler", player.getName(), duplexHandler);
     }
 }

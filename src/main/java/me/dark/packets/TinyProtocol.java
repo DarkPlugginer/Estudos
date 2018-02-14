@@ -1,22 +1,9 @@
 package me.dark.packets;
 
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelDuplexHandler;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.ChannelPromise;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
-
+import com.google.common.collect.Lists;
+import com.google.common.collect.MapMaker;
+import com.mojang.authlib.GameProfile;
+import io.netty.channel.*;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -28,9 +15,9 @@ import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.MapMaker;
-import com.mojang.authlib.GameProfile;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
 
 /**
  * Represents a very tiny alternative to ProtocolLib.
@@ -58,28 +45,22 @@ public abstract class TinyProtocol {
     // Packets we have to intercept
     private static final Class<?> PACKET_LOGIN_IN_START = Reflection.getMinecraftClass("PacketLoginInStart");
     private static final Reflection.FieldAccessor<GameProfile> getGameProfile = Reflection.getField(PACKET_LOGIN_IN_START, GameProfile.class, 0);
-
+    protected volatile boolean closed;
+    protected Plugin plugin;
     // Speedup channel lookup
     private Map<String, Channel> channelLookup = new MapMaker().weakValues().makeMap();
     private Listener listener;
-
     // Channels that have already been removed
     private Set<Channel> uninjectedChannels = Collections.newSetFromMap(new MapMaker().weakKeys().<Channel, Boolean>makeMap());
-
     // List of network markers
     private List<Object> networkManagers;
-
     // Injected channel handlers
     private List<Channel> serverChannels = Lists.newArrayList();
     private ChannelInboundHandlerAdapter serverChannelHandler;
     private ChannelInitializer<Channel> beginInitProtocol;
     private ChannelInitializer<Channel> endInitProtocol;
-
     // Current handler name
     private String handlerName;
-
-    protected volatile boolean closed;
-    protected Plugin plugin;
 
     /**
      * Construct a new instance of TinyProtocol, and start intercepting packets for all connected clients and future clients.
@@ -120,7 +101,7 @@ public abstract class TinyProtocol {
         endInitProtocol = new ChannelInitializer<Channel>() {
 
             @Override
-            protected void initChannel(Channel channel) throws Exception {
+            protected void initChannel(Channel channel) {
                 try {
                     // This can take a while, so we need to stop the main thread from interfering
                     synchronized (networkManagers) {
@@ -140,7 +121,7 @@ public abstract class TinyProtocol {
         beginInitProtocol = new ChannelInitializer<Channel>() {
 
             @Override
-            protected void initChannel(Channel channel) throws Exception {
+            protected void initChannel(Channel channel) {
                 channel.pipeline().addLast(endInitProtocol);
             }
 
@@ -149,7 +130,7 @@ public abstract class TinyProtocol {
         serverChannelHandler = new ChannelInboundHandlerAdapter() {
 
             @Override
-            public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+            public void channelRead(ChannelHandlerContext ctx, Object msg) {
                 Channel channel = (Channel) msg;
 
                 // Prepare to initialize ths channel
@@ -254,8 +235,8 @@ public abstract class TinyProtocol {
      * Note that this is not executed on the main thread.
      *
      * @param receiver - the receiving player, NULL for early login/status packets.
-     * @param channel - the channel that received the packet. Never NULL.
-     * @param packet - the packet being sent.
+     * @param channel  - the channel that received the packet. Never NULL.
+     * @param packet   - the packet being sent.
      * @return The packet to send instead, or NULL to cancel the transmission.
      */
     public Object onPacketOutAsync(Player receiver, Channel channel, Object packet) {
@@ -267,9 +248,9 @@ public abstract class TinyProtocol {
      * <p>
      * Use {@link Channel#remoteAddress()} to get the remote address of the client.
      *
-     * @param sender - the player that sent the packet, NULL for early login/status packets.
+     * @param sender  - the player that sent the packet, NULL for early login/status packets.
      * @param channel - channel that received the packet. Never NULL.
-     * @param packet - the packet being received.
+     * @param packet  - the packet being received.
      * @return The packet to recieve instead, or NULL to cancel.
      */
     public Object onPacketInAsync(Player sender, Channel channel, Object packet) {
@@ -294,7 +275,7 @@ public abstract class TinyProtocol {
      * Note that {@link #onPacketOutAsync(Player, Channel, Object)} will be invoked with this packet.
      *
      * @param channel - client identified by a channel.
-     * @param packet - the packet to send.
+     * @param packet  - the packet to send.
      */
     public void sendPacket(Channel channel, Object packet) {
         channel.pipeline().writeAndFlush(packet);
@@ -318,7 +299,7 @@ public abstract class TinyProtocol {
      * Note that {@link #onPacketInAsync(Player, Channel, Object)} will be invoked with this packet.
      *
      * @param channel - client identified by a channel.
-     * @param packet - the packet that will be received by the server.
+     * @param packet  - the packet that will be received by the server.
      */
     public void receivePacket(Channel channel, Object packet) {
         channel.pipeline().context("encoder").fireChannelRead(packet);
@@ -499,8 +480,8 @@ public abstract class TinyProtocol {
 
         @Override
         public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
-            if(msg instanceof PacketCapsule) {
-                super.write(ctx, ((PacketCapsule)msg).getPacket(), promise);
+            if (msg instanceof PacketCapsule) {
+                super.write(ctx, ((PacketCapsule) msg).getPacket(), promise);
                 return;
             }
 
