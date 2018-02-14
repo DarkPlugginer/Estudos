@@ -4,6 +4,7 @@ import me.dark.commands.Model;
 import me.dark.commands.common.BaseCommandExecutor;
 import me.dark.commands.common.CommandManager;
 import me.dark.listener.PlayerListener;
+import me.dark.packets.Login;
 import org.bukkit.craftbukkit.v1_8_R3.CraftServer;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -45,7 +46,7 @@ public class Main extends JavaPlugin {
         CommandManager.register(Model.class);
 
         getServer().getPluginManager().registerEvents(new PlayerListener(), this);
-        //new Login().enable();
+        new Login().enable();
 
         super.onEnable();
     }

@@ -1,17 +1,15 @@
 package me.dark.packets;
 
 import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.properties.Property;
-import com.mojang.authlib.properties.PropertyMap;
 import io.netty.channel.Channel;
 import me.dark.Main;
 import me.dark.others.CheckPremium;
-import me.dark.others.Skin;
 import me.dark.packets.reflection.ClassReflection;
 import net.minecraft.server.v1_8_R3.*;
 import org.apache.commons.io.Charsets;
 import org.bukkit.entity.Player;
 
+import java.lang.reflect.Field;
 import java.net.SocketAddress;
 import java.util.List;
 import java.util.UUID;
@@ -102,6 +100,7 @@ public class Login {
             nm.handle(new PacketLoginOutDisconnect(exception));
             nm.close(exception);
         } catch (Exception arg2) {
+            System.err.println(arg2.getMessage());
         }
 
     }
@@ -116,9 +115,15 @@ public class Login {
                 }
             }
         } catch (Exception e1) {
-
+            System.err.println(e1.getMessage());
         }
         return null;
+    }
+
+    private void setValue(Object instance, String field, Object value) throws Exception {
+        Field f = instance.getClass().getDeclaredField(field);
+        f.setAccessible(true);
+        f.set(instance, value);
     }
 
     private class BypassLogin extends LoginListener {
@@ -129,6 +134,7 @@ public class Login {
                 ClassReflection.setField("m", this, this.networkManager, 0);
                 ClassReflection.setField("i", profile, this, 1);
             } catch (Exception e1) {
+                System.err.println(e1.getMessage());
             }
         }
 
@@ -144,11 +150,6 @@ public class Login {
                 validProfile = new GameProfile(
                         UUID.nameUUIDFromBytes(("OfflinePlayer:" + validProfile.getName()).getBytes(Charsets.UTF_8)), validProfile.getName());
 
-                PropertyMap propertyMap = new PropertyMap();
-                Skin skin = new Skin(validProfile.getId().toString());
-                propertyMap.put(skin.getSkinName(), new Property(skin.getSkinName(), skin.getSkinValue(), skin.getSkinSignatur()));
-
-                ClassReflection.setField("properties", propertyMap, gameProfile, 0);
 
                 EntityPlayer attemptLogin = new EntityPlayer(MinecraftServer.getServer(),
                         MinecraftServer.getServer().getWorldServer(0), validProfile,
@@ -157,12 +158,14 @@ public class Login {
                 // Attempt login not null
                 this.networkManager.handle(new PacketLoginOutSuccess(validProfile));
                 MinecraftServer.getServer().getPlayerList().a(this.networkManager, attemptLogin);
+
                 int h = (int) ClassReflection.getField("h", this, 1);
-                if (h++ == 600) {
+                h++;
+                if (h == 600) {
                     this.disconnect("Took too long to log in");
                 }
             } catch (Exception e1) {
-
+                System.err.println(e1.getMessage());
             }
         }
     }
