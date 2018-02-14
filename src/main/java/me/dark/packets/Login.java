@@ -24,8 +24,8 @@ public class Login {
                 if (packet instanceof PacketLoginInStart) {
                     if (gameProfile.hasField(packet)) {
                         System.out.println("jose");
-                        packet = null;
                         new BypassLogin(channel);
+                        packet = null;
                     }
                 }
 
