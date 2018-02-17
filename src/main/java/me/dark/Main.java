@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 16/2/2018. Projeto desenvolvido por Miguel Lukas.
+ * Não remova este quote.
+ */
+
 package me.dark;
 
 import me.dark.commands.Model;
@@ -9,10 +14,6 @@ import org.bukkit.craftbukkit.v1_8_R3.CraftServer;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.lang.reflect.Field;
-import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
 public class Main extends JavaPlugin {
 
@@ -20,7 +21,7 @@ public class Main extends JavaPlugin {
         return getPlugin(Main.class);
     }
 
-    public static String hash(String str) {
+   /* public static String hash(String str) {
         try {
             byte[] digest = digest(str, "SHA-1");
             return new BigInteger(digest).toString(16);
@@ -33,7 +34,7 @@ public class Main extends JavaPlugin {
         MessageDigest md = MessageDigest.getInstance(algorithm);
         byte[] strBytes = str.getBytes(StandardCharsets.UTF_8);
         return md.digest(strBytes);
-    }
+    } */
 
     @Override
     public void onLoad() {
@@ -56,6 +57,12 @@ public class Main extends JavaPlugin {
         super.onDisable();
     }
 
+
+    /**
+     * @param instance - objeto a ser modificado
+     * @param field    - nome do field
+     * @param value    - novo valor do field
+     */
     private void setValue(Object instance, String field, Object value) {
         try {
             Field f = instance.getClass().getDeclaredField(field);

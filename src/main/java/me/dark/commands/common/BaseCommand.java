@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 16/2/2018. Projeto desenvolvido por Miguel Lukas.
+ * Não remova este quote.
+ */
+
 package me.dark.commands.common;
 
 import me.dark.commands.Permission;

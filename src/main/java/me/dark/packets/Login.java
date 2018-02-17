@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 16/2/2018. Projeto desenvolvido por Miguel Lukas.
+ * Não remova este quote.
+ */
+
 package me.dark.packets;
 
 import com.google.gson.JsonElement;
@@ -135,13 +140,10 @@ public class Login {
         public void c() {
             try {
                 GameProfile validProfile = (GameProfile) ClassReflection.getField("i", this, 1);
-                validProfile = new GameProfile(
-                        UUID.nameUUIDFromBytes(("OfflinePlayer:" + validProfile.getName()).getBytes(Charsets.UTF_8)), validProfile.getName());
+                validProfile = new GameProfile(UUID.nameUUIDFromBytes(("OfflinePlayer:" + validProfile.getName()).getBytes(Charsets.UTF_8)), validProfile.getName());
 
 
-                EntityPlayer attemptLogin = new EntityPlayer(MinecraftServer.getServer(),
-                        MinecraftServer.getServer().getWorldServer(0), validProfile,
-                        new PlayerInteractManager(MinecraftServer.getServer().getWorldServer(0)));
+                EntityPlayer attemptLogin = new EntityPlayer(MinecraftServer.getServer(), MinecraftServer.getServer().getWorldServer(0), validProfile, new PlayerInteractManager(MinecraftServer.getServer().getWorldServer(0)));
 
                 this.networkManager.handle(new PacketLoginOutSuccess(validProfile));
                 MinecraftServer.getServer().getPlayerList().a(this.networkManager, attemptLogin);

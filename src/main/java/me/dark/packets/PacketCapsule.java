@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 16/2/2018. Projeto desenvolvido por Miguel Lukas.
+ * Não remova este quote.
+ */
+
 package me.dark.packets;
 
 public class PacketCapsule {

@@ -51,6 +51,9 @@ public class PlayerListener implements Listener {
             "genos",
             "izayoi");
 
+    /**
+     * @param player - jogador a ser adicionado
+     */
     private void add(Player player) {
         ChannelDuplexHandler duplexHandler = new ChannelDuplexHandler() {
 

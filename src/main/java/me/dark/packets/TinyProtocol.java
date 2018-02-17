@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 16/2/2018. Projeto desenvolvido por Miguel Lukas.
+ * Não remova este quote.
+ */
+
 package me.dark.packets;
 
 import com.google.common.collect.Lists;
@@ -19,13 +24,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
-/**
- * Represents a very tiny alternative to ProtocolLib.
- * <p>
- * It now supports intercepting packets during login and status ping (such as OUT_SERVER_PING)!
- *
- * @author Kristian
- */
 public abstract class TinyProtocol {
     private static final AtomicInteger ID = new AtomicInteger(0);
 
